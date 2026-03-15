@@ -1,0 +1,485 @@
+openapi: 3.0.4
+info:
+  title: Mezcala API
+  version: 0.0.1
+  description: API for managing databases via Mezcala.
+
+servers:
+  - url: https://mezcala.net/api
+
+tags:
+  - name: databases
+    description: Register, create, and manage database connections.
+  - name: database-sync
+    description: Configure and trigger sync rules between databases.
+  - name: health
+    description: Service health and availability.
+
+paths:
+  /health:
+    get:
+      operationId: checkHealth
+      tags:
+        - health
+      summary: Check Mezcala health
+      responses:
+        '200':
+          $ref: '#/components/responses/HealthResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/supported:
+    get:
+      operationId: getSupportedEngines
+      tags:
+        - databases
+      summary: List all supported database engines and versions
+      responses:
+        '200':
+          $ref: '#/components/responses/SupportedEnginesResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/create:
+    post:
+      operationId: createDatabase
+      tags:
+        - databases
+      summary: Create a new managed database
+      requestBody:
+        $ref: '#/components/requestBodies/DatabaseRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/DatabaseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/add:
+    post:
+      operationId: addDatabase
+      tags:
+        - databases
+      summary: Register an existing external database
+      requestBody:
+        $ref: '#/components/requestBodies/DatabaseRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/DatabaseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/delete:
+    delete:
+      operationId: deleteDatabase
+      tags:
+        - databases
+      summary: Delete a database by ID
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+      responses:
+        '204':
+          description: Database deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/sync/init:
+    post:
+      operationId: createSyncRule
+      tags:
+        - database-sync
+      summary: Create a new sync rule for a database
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+      requestBody:
+        $ref: '#/components/requestBodies/SyncRuleRequest'
+      responses:
+        '201':
+          $ref: '#/components/responses/SyncRuleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/sync/{syncID}/update:
+    put:
+      operationId: updateSyncRule
+      tags:
+        - database-sync
+      summary: Update an existing sync rule
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+        - $ref: '#/components/parameters/syncID'
+      requestBody:
+        $ref: '#/components/requestBodies/SyncRuleRequest'
+      responses:
+        '200':
+          $ref: '#/components/responses/SyncRuleResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/sync/{syncID}/delete:
+    delete:
+      operationId: deleteSyncRule
+      tags:
+        - database-sync
+      summary: Delete a sync rule
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+        - $ref: '#/components/parameters/syncID'
+      responses:
+        '204':
+          description: Sync rule deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/sync:
+    put:
+      operationId: executeSyncRule
+      tags:
+        - database-sync
+      summary: Trigger execution of a sync rule
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+      requestBody:
+        required: true
+        description: Identifies which sync rule to execute.
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id
+              properties:
+                id:
+                  type: integer
+                  format: int64
+                  description: ID of the sync rule to execute
+                  example: 7
+      responses:
+        '200':
+          $ref: '#/components/responses/SyncExecutionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  parameters:
+    dbID:
+      name: dbID
+      in: path
+      description: Unique identifier of the database
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 42
+
+    syncID:
+      name: syncID
+      in: path
+      description: Unique identifier of the sync rule
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 7
+
+  schemas:
+    Error:
+      type: object
+      description: Standard error envelope returned for all 4xx and 5xx responses.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: NOT_FOUND
+        message:
+          type: string
+          description: Human-readable description of the error
+          example: The requested resource was not found.
+        details:
+          type: object
+          description: Optional additional context about the error
+          additionalProperties: true
+
+    DatabaseConnectionConfig:
+      type: object
+      description: Connection properties for a database.
+      required:
+        - name
+        - engine
+        - version
+        - host
+        - port
+        - username
+        - password
+      properties:
+        name:
+          type: string
+          example: my-database
+        username:
+          type: string
+          example: admin
+        password:
+          type: string
+          format: password
+          example: s3cr3t
+        engine:
+          type: string
+          example: postgres
+        version:
+          type: string
+          example: "15"
+        alias:
+          type: string
+          description: Optional human-friendly label
+          example: prod-db
+        host:
+          type: string
+          example: db.example.com
+        port:
+          type: string
+          example: "5432"
+        ssl_mode:
+          type: string
+          example: require
+        path:
+          type: string
+          description: Optional filesystem path for local/embedded engines
+          example: /var/lib/mydb
+        role:
+          type: string
+          description: Database role for connection
+          example: readonly
+
+    # Shared body for createSyncRule (POST) and updateSyncRule (PUT) — kept shared.
+    SyncRuleConfig:
+      type: object
+      description: Configuration for syncing data between databases with optional masking rules.
+      required:
+        - from
+        - to
+      properties:
+        from:
+          type: integer
+          format: int64
+          description: Source database ID registered in Mezcala
+          example: 1
+        to:
+          type: integer
+          format: int64
+          description: Destination database ID registered in Mezcala
+          example: 2
+        exclude:
+          type: array
+          description: Table names to exclude from the sync
+          items:
+            type: string
+          example: [audit_logs, temp_data]
+        schemas:
+          type: array
+          description: Schemas to include in the sync
+          items:
+            type: string
+          default: [public]
+          example: [public, analytics]
+        data_rules:
+          type: object
+          description: >
+            Column-level anonymization rules. Keys are column names or glob-style
+            patterns (e.g. encrypted_*). Use null to drop a column entirely.
+          additionalProperties:
+            type: string
+          example:
+            email: MASKED
+            encrypted_*: null
+
+  requestBodies:
+    DatabaseRequest:
+      required: true
+      description: Payload for registering or creating a database connection.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DatabaseConnectionConfig'
+
+
+    SyncRuleRequest:
+      required: true
+      description: Payload for creating or updating a sync rule.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SyncRuleConfig'
+
+  responses:
+
+    HealthResponse:
+      description: Service is reachable and reports its current status.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - status
+            properties:
+              status:
+                type: string
+              version:
+                type: string
+                example: 1.2.3
+
+    SupportedEnginesResponse:
+      description: Array of supported database engines and their available versions.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              type: object
+              required:
+                - engine
+                - versions
+              properties:
+                engine:
+                  type: string
+                  example: postgres
+                versions:
+                  type: array
+                  items:
+                    type: string
+                  example: ["14", "15", "16"]
+
+    DatabaseResponse:
+      description: The created or registered database record.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/DatabaseConnectionConfig'
+              - type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: System-assigned unique identifier
+                    example: 42
+
+    SyncRuleResponse:
+      description: The created or updated sync rule.
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SyncRuleConfig'
+              - type: object
+                required:
+                  - id
+                properties:
+                  id:
+                    type: integer
+                    format: int64
+                    description: System-assigned sync rule identifier
+                    example: 7
+
+    SyncExecutionResponse:
+      description: Result of triggering a sync rule execution.
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - sync_id
+              - status
+            properties:
+              sync_id:
+                type: integer
+                format: int64
+                example: 7
+              status:
+                type: string
+              started_at:
+                type: string
+                format: date-time
+                example: "2024-06-01T12:00:00Z"
+              message:
+                type: string
+                example: Sync initiated successfully
+
+    BadRequest:
+      description: The request is malformed or fails validation.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: BAD_REQUEST
+            message: "Field 'engine' is required."
+
+    NotFound:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: NOT_FOUND
+            message: Database with the given ID was not found.
+
+    Conflict:
+      description: The resource already exists or violates a uniqueness constraint.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: CONFLICT
+            message: A database with this name already exists.
+
+    UnprocessableEntity:
+      description: The request is well-formed but contains semantic errors.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: UNPROCESSABLE_ENTITY
+            message: Source and destination databases cannot be the same.
+
+    InternalServerError:
+      description: An unexpected server-side error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            code: INTERNAL_SERVER_ERROR
+            message: An unexpected error occurred. Please try again later.
