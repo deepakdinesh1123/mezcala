@@ -8,8 +8,6 @@ require (
 	github.com/getkin/kin-openapi v0.133.0
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/handlers v1.5.2
-	github.com/jmoiron/sqlx v1.4.0
 	github.com/moby/moby/client v0.3.0
 	github.com/nats-io/nats-server/v2 v2.12.5
 	github.com/nats-io/nats.go v1.49.0
