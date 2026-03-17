@@ -9,7 +9,6 @@ import (
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/config"
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/mq"
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/spec"
-	"github.com/deepakdinesh1123/mezcala/pkgs/backend/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -21,7 +20,6 @@ type Server struct {
 	agent     *agent.Agent
 	envConfig *config.EnvConfig
 	logger    *zerolog.Logger
-	db        store.Store
 }
 
 func NewServer(ctx context.Context, envConfig *config.EnvConfig, logger *zerolog.Logger) (*http.Server, error) {
@@ -76,14 +74,11 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, logger *zerolog
 
 	logger.Info().Msg("Agent started")
 
-	db, err := store.NewDBStore(ctx, envConfig)
-
 	srv := &Server{
 		js:        js,
 		envConfig: envConfig,
 		logger:    logger,
 		agent:     ag,
-		db:        db,
 	}
 
 	r := chi.NewRouter()

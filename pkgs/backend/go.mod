@@ -11,6 +11,10 @@ require (
 	github.com/moby/moby/client v0.3.0
 	github.com/nats-io/nats-server/v2 v2.12.5
 	github.com/nats-io/nats.go v1.49.0
+	github.com/google/uuid v1.6.0
+	github.com/moby/moby/client v0.3.0
+	github.com/nats-io/nats-server/v2 v2.12.5
+	github.com/nats-io/nats.go v1.49.0
 	github.com/oapi-codegen/runtime v1.2.0
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/viper v1.21.0
@@ -35,7 +39,6 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
-	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.4 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
