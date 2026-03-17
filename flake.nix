@@ -21,7 +21,7 @@
         ];
 
         backendInputs = mezDeps ++ import ./pkgs/backend/shell.nix { inherit pkgs; };
-        frontendInputs = mezDeps ++ import ./pkgs/frontend/shell.nix { inherit pkgs; };
+        frontendInputs = mezDeps ++ import ./pkgs/mezui/shell.nix { inherit pkgs; };
 
         devShells = {
           default = pkgs.mkShell {

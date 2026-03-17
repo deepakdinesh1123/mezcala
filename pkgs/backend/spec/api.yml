@@ -12,10 +12,15 @@ tags:
     description: Register, create, and manage database connections.
   - name: database-sync
     description: Configure and trigger sync rules between databases.
+  - name: tasks
+    description: Query the status and result of async operations.
   - name: health
     description: Service health and availability.
 
 paths:
+
+  # ─── Health ────────────────────────────────────────────────────────────────
+
   /health:
     get:
       operationId: checkHealth
@@ -27,6 +32,8 @@ paths:
           $ref: '#/components/responses/HealthResponse'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  # ─── Databases ─────────────────────────────────────────────────────────────
 
   /databases/supported:
     get:
@@ -46,15 +53,43 @@ paths:
       tags:
         - databases
       summary: Create a new managed database
+      description: >
+        Initiates database creation asynchronously. Returns a task ID that can
+        be polled via `GET /databases/create/tasks/{taskID}`. On completion the
+        task result contains an acknowledgment with the new database ID.
       requestBody:
         $ref: '#/components/requestBodies/DatabaseRequest'
       responses:
-        '201':
-          $ref: '#/components/responses/DatabaseResponse'
+        '202':
+          $ref: '#/components/responses/TaskAccepted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
           $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/create/tasks/{taskID}:
+    get:
+      operationId: getCreateDatabaseTaskStatus
+      tags:
+        - tasks
+      summary: Get the status of a createDatabase task
+      description: >
+        Polls the status of a task initiated by `POST /databases/create`.
+        When `status` is `completed` the `result` field contains a
+        `DatabaseAcknowledgment` with the new database ID.
+      parameters:
+        - $ref: '#/components/parameters/taskID'
+      responses:
+        '200':
+          description: Task status for a createDatabase operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDatabaseTaskStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -64,11 +99,14 @@ paths:
       tags:
         - databases
       summary: Register an existing external database
+      description: >
+        Synchronously registers an external database connection and returns an
+        acknowledgment with the assigned database ID.
       requestBody:
         $ref: '#/components/requestBodies/DatabaseRequest'
       responses:
         '201':
-          $ref: '#/components/responses/DatabaseResponse'
+          $ref: '#/components/responses/DatabaseAcknowledgmentResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '409':
@@ -82,15 +120,65 @@ paths:
       tags:
         - databases
       summary: Delete a database by ID
+      description: >
+        Initiates database deletion asynchronously. Returns a task ID that can
+        be polled via `GET /databases/{dbID}/delete/tasks/{taskID}`. On
+        completion the task result contains a confirmation message.
       parameters:
         - $ref: '#/components/parameters/dbID'
       responses:
-        '204':
-          description: Database deleted successfully
+        '202':
+          $ref: '#/components/responses/TaskAccepted'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/delete/tasks/{taskID}:
+    get:
+      operationId: getDeleteDatabaseTaskStatus
+      tags:
+        - tasks
+      summary: Get the status of a deleteDatabase task
+      description: >
+        Polls the status of a task initiated by `DELETE /databases/{dbID}/delete`.
+        When `status` is `completed` the `result` field contains a
+        `DeletionAcknowledgment`.
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+        - $ref: '#/components/parameters/taskID'
+      responses:
+        '200':
+          description: Task status for a deleteDatabase operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteDatabaseTaskStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /databases/{dbID}/connection-url:
+    get:
+      operationId: getDatabaseConnectionUrl
+      tags:
+        - databases
+      summary: Get the connection URL for a database
+      description: >
+        Returns the fully-formed connection URL for the specified database,
+        including credentials. Handle with care — treat the response as a secret.
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+      responses:
+        '200':
+          $ref: '#/components/responses/ConnectionUrlResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ─── Database Sync ─────────────────────────────────────────────────────────
 
   /databases/{dbID}/sync/init:
     post:
@@ -98,6 +186,8 @@ paths:
       tags:
         - database-sync
       summary: Create a new sync rule for a database
+      description: >
+        Synchronously creates a sync rule and returns it with its assigned ID.
       parameters:
         - $ref: '#/components/parameters/dbID'
       requestBody:
@@ -118,6 +208,8 @@ paths:
       tags:
         - database-sync
       summary: Update an existing sync rule
+      description: >
+        Synchronously updates a sync rule and returns the updated record.
       parameters:
         - $ref: '#/components/parameters/dbID'
         - $ref: '#/components/parameters/syncID'
@@ -139,12 +231,13 @@ paths:
       tags:
         - database-sync
       summary: Delete a sync rule
+      description: Synchronously deletes a sync rule.
       parameters:
         - $ref: '#/components/parameters/dbID'
         - $ref: '#/components/parameters/syncID'
       responses:
         '204':
-          description: Sync rule deleted successfully
+          description: Sync rule deleted successfully.
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -156,6 +249,10 @@ paths:
       tags:
         - database-sync
       summary: Trigger execution of a sync rule
+      description: >
+        Triggers a sync rule run asynchronously. Returns a task ID that can be
+        polled via `GET /databases/{dbID}/sync/{syncID}/tasks/{taskID}`. On completion
+        the task result contains the sync execution summary.
       parameters:
         - $ref: '#/components/parameters/dbID'
       requestBody:
@@ -174,8 +271,8 @@ paths:
                   description: ID of the sync rule to execute
                   example: 7
       responses:
-        '200':
-          $ref: '#/components/responses/SyncExecutionResponse'
+        '202':
+          $ref: '#/components/responses/TaskAccepted'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -185,7 +282,34 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /databases/{dbID}/sync/{syncID}/tasks/{taskID}:
+    get:
+      operationId: getExecuteSyncTaskStatus
+      tags:
+        - tasks
+      summary: Get the status of an executeSyncRule task
+      description: >
+        Polls the status of a task initiated by `PUT /databases/{dbID}/sync`.
+        When `status` is `completed` the `result` field contains a
+        `SyncExecutionResult` with timing and outcome details.
+      parameters:
+        - $ref: '#/components/parameters/dbID'
+        - $ref: '#/components/parameters/syncID'
+        - $ref: '#/components/parameters/taskID'
+      responses:
+        '200':
+          description: Task status for an executeSyncRule operation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteSyncTaskStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
+
   parameters:
     dbID:
       name: dbID
@@ -207,7 +331,20 @@ components:
         format: int64
         example: 7
 
+    taskID:
+      name: taskID
+      in: path
+      description: Unique identifier of the async task
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
   schemas:
+
+    # ── Errors ────────────────────────────────────────────────────────────────
+
     Error:
       type: object
       description: Standard error envelope returned for all 4xx and 5xx responses.
@@ -228,13 +365,94 @@ components:
           description: Optional additional context about the error
           additionalProperties: true
 
-    DatabaseConnectionConfig:
+    # ── Task schemas ──────────────────────────────────────────────────────────
+
+    TaskReference:
       type: object
-      description: Connection properties for a database.
+      description: Returned immediately when an async operation is accepted.
       required:
-        - name
+        - task_id
+      properties:
+        task_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the async task
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    TaskStatusBase:
+      type: object
+      description: >
+        Common fields shared by all task status responses. When `status` is
+        `completed` the operation-specific `result` field is populated.
+        When `status` is `failed` the `error` field is populated.
+      required:
+        - task_id
+        - status
+        - created_at
+      properties:
+        task_id:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed]
+          example: completed
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T12:00:00Z"
+        completed_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T12:00:05Z"
+        message:
+          type: string
+          description: Human-readable status message
+          example: Task completed successfully.
+        error:
+          $ref: '#/components/schemas/Error'
+
+    CreateDatabaseTaskStatus:
+      description: >
+        Task status for a `createDatabase` operation. On completion, `result`
+        contains the new database ID.
+      allOf:
+        - $ref: '#/components/schemas/TaskStatusBase'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/DatabaseAcknowledgment'
+
+    DeleteDatabaseTaskStatus:
+      description: >
+        Task status for a `deleteDatabase` operation. On completion, `result`
+        contains a deletion confirmation.
+      allOf:
+        - $ref: '#/components/schemas/TaskStatusBase'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/DeletionAcknowledgment'
+
+    ExecuteSyncTaskStatus:
+      description: >
+        Task status for an `executeSyncRule` operation. On completion, `result`
+        contains sync timing and outcome details.
+      allOf:
+        - $ref: '#/components/schemas/TaskStatusBase'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/SyncExecutionResult'
+
+    # ── Database schemas ──────────────────────────────────────────────────────
+
+    DatabaseConfig:
+      type: object
+      description: Connection configuration for a database.
+      required:
         - engine
-        - version
         - host
         - port
         - username
@@ -277,8 +495,41 @@ components:
           type: string
           description: Database role for connection
           example: readonly
+        image:
+          type: string
+          description: The docker image to use
+          example: postgres:15
 
-    # Shared body for createSyncRule (POST) and updateSyncRule (PUT) — kept shared.
+    DatabaseAcknowledgment:
+      type: object
+      description: >
+        Confirmation returned after a database is successfully created or
+        registered. Contains only the system-assigned ID.
+      required:
+        - id
+        - message
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: System-assigned unique identifier for the new database
+          example: 42
+        message:
+          type: string
+          example: Database created successfully.
+
+    DeletionAcknowledgment:
+      type: object
+      description: Confirmation that a resource was deleted.
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: Resource deleted successfully.
+
+    # ── Sync schemas ──────────────────────────────────────────────────────────
+
     SyncRuleConfig:
       type: object
       description: Configuration for syncing data between databases with optional masking rules.
@@ -320,6 +571,42 @@ components:
             email: MASKED
             encrypted_*: null
 
+    SyncExecutionResult:
+      type: object
+      description: Outcome details of a sync rule execution.
+      required:
+        - sync_id
+        - status
+      properties:
+        sync_id:
+          type: integer
+          format: int64
+          example: 7
+        status:
+          type: string
+          example: completed
+        started_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T12:00:00Z"
+        finished_at:
+          type: string
+          format: date-time
+          example: "2024-06-01T12:00:42Z"
+        tables_synced:
+          type: integer
+          description: Number of tables processed during the sync
+          example: 14
+        rows_synced:
+          type: integer
+          description: Total number of rows written to the destination
+          example: 58320
+        message:
+          type: string
+          example: Sync completed successfully.
+
+  # ── Request bodies ──────────────────────────────────────────────────────────
+
   requestBodies:
     DatabaseRequest:
       required: true
@@ -327,8 +614,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/DatabaseConnectionConfig'
-
+            $ref: '#/components/schemas/DatabaseConfig'
 
     SyncRuleRequest:
       required: true
@@ -337,6 +623,8 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SyncRuleConfig'
+
+  # ── Responses ───────────────────────────────────────────────────────────────
 
   responses:
 
@@ -376,22 +664,12 @@ components:
                     type: string
                   example: ["14", "15", "16"]
 
-    DatabaseResponse:
-      description: The created or registered database record.
+    DatabaseAcknowledgmentResponse:
+      description: The database was registered or created successfully.
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '#/components/schemas/DatabaseConnectionConfig'
-              - type: object
-                required:
-                  - id
-                properties:
-                  id:
-                    type: integer
-                    format: int64
-                    description: System-assigned unique identifier
-                    example: 42
+            $ref: '#/components/schemas/DatabaseAcknowledgment'
 
     SyncRuleResponse:
       description: The created or updated sync rule.
@@ -410,29 +688,36 @@ components:
                     description: System-assigned sync rule identifier
                     example: 7
 
-    SyncExecutionResponse:
-      description: Result of triggering a sync rule execution.
+    TaskAccepted:
+      description: >
+        The operation has been accepted and is running asynchronously.
+        Poll the corresponding task status endpoint to track progress.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TaskReference'
+
+    ConnectionUrlResponse:
+      description: The connection URL for the specified database.
       content:
         application/json:
           schema:
             type: object
             required:
-              - sync_id
-              - status
+              - id
+              - connection_url
             properties:
-              sync_id:
+              id:
                 type: integer
                 format: int64
-                example: 7
-              status:
+                description: Database ID
+                example: 42
+              connection_url:
                 type: string
-              started_at:
-                type: string
-                format: date-time
-                example: "2024-06-01T12:00:00Z"
-              message:
-                type: string
-                example: Sync initiated successfully
+                description: >
+                  Fully-formed connection URL including credentials.
+                  Treat as a secret.
+                example: "postgres://admin:s3cr3t@db.example.com:5432/my-database?sslmode=require"
 
     BadRequest:
       description: The request is malformed or fails validation.

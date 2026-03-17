@@ -1,0 +1,28 @@
+services:
+  app:
+    build: 
+      context: pkgs/backend
+    container_name: go-app
+    depends_on:
+      - nats
+    environment:
+      EMBEDDED_NATS: false
+    ports:
+      - "7007:7007"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+
+  nats:
+    image: nats:2.12-alpine
+    container_name: nats-server
+    command: [
+      "-js",                 # Enable JetStream
+      "-m", "8222",          # HTTP monitoring port
+      "--store_dir", "/data" # JetStream storage
+    ]
+    ports:
+      - "4222:4222"  # Client connections
+      - "8222:8222"  # Monitoring
+
+volumes:
+  nats_data:
