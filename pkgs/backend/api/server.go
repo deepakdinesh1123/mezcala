@@ -11,6 +11,8 @@ import (
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/spec"
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/store"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/gorilla/handlers"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 	"github.com/rs/zerolog"
@@ -86,14 +88,20 @@ func NewServer(ctx context.Context, envConfig *config.EnvConfig, logger *zerolog
 		db:        db,
 	}
 
+	corsOptions := handlers.AllowedOrigins([]string{"*"})
+	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
+	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+
 	r := chi.NewRouter()
+	r.Use(middleware.Logger)
 	handler := spec.NewStrictHandler(srv, []spec.StrictMiddlewareFunc{})
 	spec.HandlerFromMux(handler, r)
 	server := &http.Server{
 		Addr:    envConfig.HOST + ":" + fmt.Sprint(envConfig.PORT),
-		Handler: r,
+		Handler: handlers.CORS(corsOptions, corsMethods, corsHeaders)(r),
 	}
 
+	logger.Info().Msgf("Starting server %s:%d", envConfig.HOST, envConfig.PORT)
 	return server, nil
 }
 
