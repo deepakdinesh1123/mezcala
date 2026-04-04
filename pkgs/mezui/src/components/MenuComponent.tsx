@@ -20,7 +20,7 @@ import { Button } from "./ui/button";
 
 export function MenuComponent() {
   const { engines } = useEngines();
-  const navigate =  useNavigate();
+  const navigate = useNavigate();
   return (
     <Menubar className="w-72">
       <MenubarMenu>

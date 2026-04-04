@@ -1,8 +1,8 @@
 import { PlusIcon } from "@phosphor-icons/react";
 import { Button } from "./ui/button";
-import * as React from "react"
-import { Controller, useForm } from "react-hook-form"
-import { toast } from "sonner"
+import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 import {
   Card,
@@ -10,33 +10,24 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "@/components/ui/field"
-import { Input } from "@/components/ui/input"
+} from "@/components/ui/field";
+
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input";
 import type { DatabaseConfig } from "@/oas-client";
-
-// export function CreateComponent(){
-
-//     const handleCreateClick = () => {
-//         console.log("Create clicked");
-        
-//     }
-//     return(
-//         <>
-//         <div>
-//             <Button onClick={handleCreateClick}>Create <PlusIcon/></Button>
-
-            
-//         </div>
-//         </>
-//     )
-// }
-
 
 export function CreateComponent() {
   const form = useForm<DatabaseConfig>({
@@ -44,7 +35,7 @@ export function CreateComponent() {
       username: "",
       password: "",
     },
-  })
+  });
 
   function onSubmit(data: DatabaseConfig) {
     toast("You submitted the following values:", {
@@ -60,7 +51,7 @@ export function CreateComponent() {
       style: {
         "--border-radius": "calc(var(--radius)  + 4px)",
       } as React.CSSProperties,
-    })
+    });
   }
 
   return (
@@ -71,19 +62,57 @@ export function CreateComponent() {
       <CardContent>
         <form id="form-rhf-demo" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
+            <div className="grid grid-cols-3 gap-4">
+                <Field>
+                  <FieldLabel htmlFor="checkout-exp-month-ts6">
+                    Base Image
+                  </FieldLabel>
+                  <Select defaultValue="">
+                    <SelectTrigger id="checkout-exp-month-ts6">
+                      <SelectValue placeholder="MM" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="01">alpine</SelectItem>
+                        <SelectItem value="02">ubuntu</SelectItem>
+                        <SelectItem value="03">bitnami</SelectItem>
+                        <SelectItem value="04">airbyte</SelectItem>
+
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field >
+                  <FieldLabel htmlFor="checkout-7j9-exp-year-f59">
+                    Engine
+                  </FieldLabel>
+                  <Select defaultValue="">
+                    <SelectTrigger id="checkout-7j9-exp-year-f59">
+                      <SelectValue placeholder="YYYY" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="postgres">postgres</SelectItem>
+                        <SelectItem value="mysql">mysql</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="checkout-7j9-cvv">Version</FieldLabel>
+                  <Input id="checkout-7j9-cvv" placeholder="latest" required />
+                </Field>
+              </div>
             <Controller
               name="name"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="name">
-                    Name
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20"  htmlFor="name">Name</FieldLabel>
                   <Input
                     {...field}
                     id="name"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -91,19 +120,17 @@ export function CreateComponent() {
                   )}
                 </Field>
               )}
-            /><Controller
+            />
+            <Controller
               name="username"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="username">
-                    Username
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="username">Username</FieldLabel>
                   <Input
                     {...field}
                     id="username"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -116,15 +143,12 @@ export function CreateComponent() {
               name="password"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="password">
-                    Password
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="password">Password</FieldLabel>
                   <Input
                     {...field}
                     id="password"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -137,15 +161,12 @@ export function CreateComponent() {
               name="alias"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="alias">
-                    Alias
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="alias">Alias</FieldLabel>
                   <Input
                     {...field}
                     id="alias"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -158,15 +179,12 @@ export function CreateComponent() {
               name="host"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="host">
-                    Host
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="host">Host</FieldLabel>
                   <Input
                     {...field}
                     id="host"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -179,15 +197,12 @@ export function CreateComponent() {
               name="port"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="port">
-                    Port
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="port">Port</FieldLabel>
                   <Input
                     {...field}
                     id="port"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -200,15 +215,12 @@ export function CreateComponent() {
               name="ssl_mode"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="ssl_mode">
-                    SSL Mode
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="ssl_mode">SSL Mode</FieldLabel>
                   <Input
                     {...field}
                     id="ssl_mode"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -221,15 +233,12 @@ export function CreateComponent() {
               name="path"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="path">
-                    Path
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="path">Path</FieldLabel>
                   <Input
                     {...field}
                     id="path"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -242,15 +251,12 @@ export function CreateComponent() {
               name="role"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="role">
-                    Role
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="role">Role</FieldLabel>
                   <Input
                     {...field}
                     id="role"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -263,15 +269,12 @@ export function CreateComponent() {
               name="image"
               control={form.control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="image">
-                    Base Image
-                  </FieldLabel>
+                <Field data-invalid={fieldState.invalid}  orientation={"horizontal"}>
+                  <FieldLabel className="w-20" htmlFor="image">Base Image</FieldLabel>
                   <Input
                     {...field}
                     id="image"
                     aria-invalid={fieldState.invalid}
-                    placeholder="route-sensitive-fox"
                     autoComplete="off"
                   />
                   {fieldState.invalid && (
@@ -280,39 +283,6 @@ export function CreateComponent() {
                 </Field>
               )}
             />
-            {/* <Controller
-              name="password"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-rhf-demo-description">
-                    Description
-                  </FieldLabel>
-                  <InputGroup>
-                    <InputGroupTextarea
-                      {...field}
-                      id="form-rhf-demo-description"
-                      placeholder="I'm having an issue with the login button on mobile."
-                      rows={6}
-                      className="min-h-24 resize-none"
-                      aria-invalid={fieldState.invalid}
-                    />
-                    <InputGroupAddon align="block-end">
-                      <InputGroupText className="tabular-nums">
-                        {field.value.length}/100 characters
-                      </InputGroupText>
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <FieldDescription>
-                    Include steps to reproduce, expected behavior, and what
-                    actually happened.
-                  </FieldDescription>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            /> */}
           </FieldGroup>
         </form>
       </CardContent>
@@ -322,10 +292,10 @@ export function CreateComponent() {
             Reset
           </Button>
           <Button type="submit" form="form-rhf-demo">
-            Create <PlusIcon/>
+            Create <PlusIcon />
           </Button>
         </Field>
       </CardFooter>
     </Card>
-  )
+  );
 }
