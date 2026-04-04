@@ -55,7 +55,19 @@ func (s *Server) DeleteDatabase(ctx context.Context, req spec.DeleteDatabaseRequ
 }
 
 func (s *Server) GetSupportedEngines(ctx context.Context, req spec.GetSupportedEnginesRequestObject) (spec.GetSupportedEnginesResponseObject, error) {
-	return spec.GetSupportedEngines200JSONResponse{}, nil
+
+	result := spec.SupportedEnginesResponse{
+		{
+			Engine:   "Postgres",
+			Versions: []string{"16, 17"},
+		},
+		{
+			Engine:   "MySQL",
+			Versions: []string{"9.6, 8.4"},
+		},
+	}
+
+	return spec.GetSupportedEngines200JSONResponse{SupportedEnginesResponseJSONResponse: result}, nil
 }
 
 func (s *Server) GetCreateDatabaseTaskStatus(ctx context.Context, req spec.GetCreateDatabaseTaskStatusRequestObject) (spec.GetCreateDatabaseTaskStatusResponseObject, error) {

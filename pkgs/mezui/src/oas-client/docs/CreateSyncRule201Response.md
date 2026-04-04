@@ -1,0 +1,29 @@
+# CreateSyncRule201Response
+
+## Properties
+
+| Name           | Type                           | Description                                                                                                                              | Notes                             |
+| -------------- | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| **from**       | **number**                     | Source database ID registered in Mezcala                                                                                                 | [default to undefined]            |
+| **to**         | **number**                     | Destination database ID registered in Mezcala                                                                                            | [default to undefined]            |
+| **exclude**    | **Array&lt;string&gt;**        | Table names to exclude from the sync                                                                                                     | [optional] [default to undefined] |
+| **schemas**    | **Array&lt;string&gt;**        | Schemas to include in the sync                                                                                                           | [optional] [default to undefined] |
+| **data_rules** | **{ [key: string]: string; }** | Column-level anonymization rules. Keys are column names or glob-style patterns (e.g. encrypted\_\*). Use null to drop a column entirely. | [optional] [default to undefined] |
+| **id**         | **number**                     | System-assigned sync rule identifier                                                                                                     | [default to undefined]            |
+
+## Example
+
+```typescript
+import { CreateSyncRule201Response } from "./api";
+
+const instance: CreateSyncRule201Response = {
+  from,
+  to,
+  exclude,
+  schemas,
+  data_rules,
+  id,
+};
+```
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
