@@ -15,13 +15,16 @@ import {
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import { useEngines } from "@/hooks/useEngines";
+import { useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
 
 export function MenuComponent() {
-
-  const {engines} = useEngines();
+  const { engines } = useEngines();
+  const navigate =  useNavigate();
   return (
     <Menubar className="w-72">
       <MenubarMenu>
+        <Button onClick={() => navigate("/")}>Home</Button>
         <MenubarTrigger>File</MenubarTrigger>
         <MenubarContent>
           <MenubarGroup>
@@ -54,12 +57,17 @@ export function MenuComponent() {
           </MenubarGroup>
         </MenubarContent>
       </MenubarMenu>
-       <MenubarMenu>
+      <MenubarMenu>
         <MenubarTrigger>Databases</MenubarTrigger>
         <MenubarContent>
           <MenubarGroup>
-            {engines.map((engine) => <MenubarItem key={engine.name}> {engine.name} <MenubarShortcut>{engine.verion}</MenubarShortcut></MenubarItem>)}
-            
+            {engines.map((engine) => (
+              <MenubarItem key={engine.engine}>
+                {" "}
+                {/* {engine.versions.map((version) => )}
+                {engine.name} <MenubarShortcut>{engine.verion}</MenubarShortcut> */}
+              </MenubarItem>
+            ))}
           </MenubarGroup>
         </MenubarContent>
       </MenubarMenu>

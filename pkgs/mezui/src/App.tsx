@@ -1,16 +1,13 @@
-import { BrowserRouter, Outlet, Route, Routes } from "react-router-dom";
+import { useRoutes } from "react-router-dom";
 import "./App.css";
-import { MenuComponent } from "./components/MenuComponent";
-import AboutComponent from "./components/AboutComponent";
+import { routes } from "./routes";
+
+function AppRoutes() {
+  return useRoutes(routes);
+}
+
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<MenuComponent />} />
-        <Route path="/about" element={<AboutComponent />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  return <AppRoutes />;
 }
 
 export default App;
