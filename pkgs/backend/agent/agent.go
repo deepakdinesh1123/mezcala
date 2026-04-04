@@ -79,7 +79,7 @@ func (a *Agent) Start(ctx context.Context) error {
 	return nil
 }
 
-func (a *Agent) runLoop(ctx context.Context, sub jetstream.Consumer, handler func(jetstream.Msg) error) {
+func (a *Agent) runLoop(ctx context.Context, sub jetstream.Consumer, handler func(context.Context, jetstream.Msg) error) {
 	a.logger.Debug().Msgf("starting consumer %s", sub.CachedInfo().Name)
 	for {
 		// Fetch blocks up to the timeout; use a short deadline so we can
@@ -98,8 +98,8 @@ func (a *Agent) runLoop(ctx context.Context, sub jetstream.Consumer, handler fun
 		}
 
 		for msg := range msgs.Messages() {
-			if err := handler(msg); err != nil {
-				msg.Nak()
+			if err := handler(ctx, msg); err != nil {
+				// msg.Nak()
 				continue
 			}
 			msg.Ack()
