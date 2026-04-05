@@ -99,9 +99,10 @@ func (a *Agent) runLoop(ctx context.Context, sub jetstream.Consumer, handler fun
 
 		for msg := range msgs.Messages() {
 			if err := handler(ctx, msg); err != nil {
-				// msg.Nak()
+				a.logger.Err(err)
 				continue
 			}
+			a.logger.Debug().Msgf("Acking the message %s", msg.Subject())
 			msg.Ack()
 		}
 

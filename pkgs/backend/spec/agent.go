@@ -2,6 +2,8 @@ package spec
 
 const DB_ADMIN_SUB = "tasks.db_admin"
 const CREATE_DB_SUB = DB_ADMIN_SUB + ".create_db.%s"
+const RESP_SUB = "tasks.updates"
+const TASK_RESP_SUB = RESP_SUB + ".%s"
 
 type DeleteDB struct {
 	ContainerName string
