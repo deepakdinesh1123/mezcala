@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/jsonstream"
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/spec"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -60,6 +62,54 @@ func (a *Agent) CreateDatabase(ctx context.Context, task_id string, msg jetstrea
 			})
 			a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
 		}
+		return err
+	}
+
+	contCreateResp, err := a.dc.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config: &container.Config{
+			Image: dbConfig.Image,
+		},
+	})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error creating container: %v", err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+	a.logger.Debug().Msgf("container created with id: %s", contCreateResp.ID)
+
+	_, err = a.dc.ContainerStart(ctx, contCreateResp.ID, client.ContainerStartOptions{})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error starting container: %v", err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+
+	contInfo, err := a.dc.ContainerInspect(ctx, contCreateResp.ID, client.ContainerInspectOptions{})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error inspecting container %s: %v", contCreateResp.ID, err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+	time.Sleep(5 * time.Second)
+	if contInfo.Container.State == nil || !contInfo.Container.State.Running {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Conatiner not running %s", contCreateResp.ID),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
 		return err
 	}
 	return nil
