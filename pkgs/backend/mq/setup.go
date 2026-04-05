@@ -22,7 +22,7 @@ func SetupJetStream(ctx context.Context, js jetstream.JetStream) error {
 
 	_, err = js.CreateOrUpdateStream(ctx, jetstream.StreamConfig{
 		Name:     "DB-ADMIN",
-		Subjects: []string{fmt.Sprintf("%s.>", spec.DB_ADMIN_SUB)},
+		Subjects: []string{fmt.Sprintf("%s.*", spec.DB_ADMIN_SUB)},
 		MaxAge:   1 * time.Hour,
 	})
 	if err != nil {
