@@ -14,12 +14,18 @@ import {
   MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar";
-import { useEngines } from "@/hooks/useEngines";
 import { useNavigate } from "react-router-dom";
 import { Button } from "./ui/button";
+import { useEngines } from "@/hooks/useEngines";
 
 export function MenuComponent() {
-  const { engines } = useEngines();
+  const { engines, loading } = useEngines();
+  console.log(loading);
+  if(loading) console.log(engines);
+  
+  
+  
+  
   const navigate = useNavigate();
   return (
     <Menubar className="w-72">
@@ -61,13 +67,7 @@ export function MenuComponent() {
         <MenubarTrigger>Databases</MenubarTrigger>
         <MenubarContent>
           <MenubarGroup>
-            {engines.map((engine) => (
-              <MenubarItem key={engine.engine}>
-                {" "}
-                {/* {engine.versions.map((version) => )}
-                {engine.name} <MenubarShortcut>{engine.verion}</MenubarShortcut> */}
-              </MenubarItem>
-            ))}
+           <MenubarItem>{loading.valueOf()}</MenubarItem>
           </MenubarGroup>
         </MenubarContent>
       </MenubarMenu>

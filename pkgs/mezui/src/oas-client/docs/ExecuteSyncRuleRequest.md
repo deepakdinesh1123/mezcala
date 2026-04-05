@@ -1,18 +1,19 @@
 # ExecuteSyncRuleRequest
 
+
 ## Properties
 
-| Name   | Type       | Description                    | Notes                  |
-| ------ | ---------- | ------------------------------ | ---------------------- |
-| **id** | **number** | ID of the sync rule to execute | [default to undefined] |
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**id** | **number** | ID of the sync rule to execute | [default to undefined]
 
 ## Example
 
 ```typescript
-import { ExecuteSyncRuleRequest } from "./api";
+import { ExecuteSyncRuleRequest } from './api';
 
 const instance: ExecuteSyncRuleRequest = {
-  id,
+    id,
 };
 ```
 

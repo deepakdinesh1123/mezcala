@@ -1,22 +1,22 @@
 # DatabaseAcknowledgment
 
-Confirmation returned after a database is successfully created or registered. Contains only the system-assigned ID.
+Confirmation returned after a database is successfully created or registered. Contains only the system-assigned ID. 
 
 ## Properties
 
-| Name        | Type       | Description                                            | Notes                  |
-| ----------- | ---------- | ------------------------------------------------------ | ---------------------- |
-| **id**      | **number** | System-assigned unique identifier for the new database | [default to undefined] |
-| **message** | **string** |                                                        | [default to undefined] |
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**id** | **number** | System-assigned unique identifier for the new database | [default to undefined]
+**message** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { DatabaseAcknowledgment } from "./api";
+import { DatabaseAcknowledgment } from './api';
 
 const instance: DatabaseAcknowledgment = {
-  id,
-  message,
+    id,
+    message,
 };
 ```
 

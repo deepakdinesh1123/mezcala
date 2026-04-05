@@ -18,7 +18,6 @@ tags:
     description: Service health and availability.
 
 paths:
-
   # ─── Health ────────────────────────────────────────────────────────────────
 
   /health:
@@ -28,10 +27,10 @@ paths:
         - health
       summary: Check Mezcala health
       responses:
-        '200':
-          $ref: '#/components/responses/HealthResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "200":
+          $ref: "#/components/responses/HealthResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # ─── Databases ─────────────────────────────────────────────────────────────
 
@@ -42,10 +41,28 @@ paths:
         - databases
       summary: List all supported database engines and versions
       responses:
-        '200':
-          $ref: '#/components/responses/SupportedEnginesResponse'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "200":
+          description: "Engine and versions"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required:
+                    - engine
+                    - versions
+                  properties:
+                    engine:
+                      type: string
+                      example: postgres
+                    versions:
+                      type: array
+                      items:
+                        type: string
+                      example: ["14", "15", "16"]
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/create:
     post:
@@ -55,43 +72,18 @@ paths:
       summary: Create a new managed database
       description: >
         Initiates database creation asynchronously. Returns a task ID that can
-        be polled via `GET /databases/create/tasks/{taskID}`. On completion the
-        task result contains an acknowledgment with the new database ID.
+        be polled to check the status
       requestBody:
-        $ref: '#/components/requestBodies/DatabaseRequest'
+        $ref: "#/components/requestBodies/DatabaseRequest"
       responses:
-        '202':
-          $ref: '#/components/responses/TaskAccepted'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /databases/create/tasks/{taskID}:
-    get:
-      operationId: getCreateDatabaseTaskStatus
-      tags:
-        - tasks
-      summary: Get the status of a createDatabase task
-      description: >
-        Polls the status of a task initiated by `POST /databases/create`.
-        When `status` is `completed` the `result` field contains a
-        `DatabaseAcknowledgment` with the new database ID.
-      parameters:
-        - $ref: '#/components/parameters/taskID'
-      responses:
-        '200':
-          description: Task status for a createDatabase operation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/CreateDatabaseTaskStatus'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "202":
+          $ref: "#/components/responses/TaskAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/add:
     post:
@@ -103,16 +95,16 @@ paths:
         Synchronously registers an external database connection and returns an
         acknowledgment with the assigned database ID.
       requestBody:
-        $ref: '#/components/requestBodies/DatabaseRequest'
+        $ref: "#/components/requestBodies/DatabaseRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/DatabaseAcknowledgmentResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "201":
+          $ref: "#/components/responses/DatabaseAcknowledgmentResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/{dbID}/delete:
     delete:
@@ -125,39 +117,14 @@ paths:
         be polled via `GET /databases/{dbID}/delete/tasks/{taskID}`. On
         completion the task result contains a confirmation message.
       parameters:
-        - $ref: '#/components/parameters/dbID'
+        - $ref: "#/components/parameters/dbID"
       responses:
-        '202':
-          $ref: '#/components/responses/TaskAccepted'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-
-  /databases/{dbID}/delete/tasks/{taskID}:
-    get:
-      operationId: getDeleteDatabaseTaskStatus
-      tags:
-        - tasks
-      summary: Get the status of a deleteDatabase task
-      description: >
-        Polls the status of a task initiated by `DELETE /databases/{dbID}/delete`.
-        When `status` is `completed` the `result` field contains a
-        `DeletionAcknowledgment`.
-      parameters:
-        - $ref: '#/components/parameters/dbID'
-        - $ref: '#/components/parameters/taskID'
-      responses:
-        '200':
-          description: Task status for a deleteDatabase operation.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DeleteDatabaseTaskStatus'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "202":
+          $ref: "#/components/responses/TaskAccepted"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/{dbID}/connection-url:
     get:
@@ -169,14 +136,14 @@ paths:
         Returns the fully-formed connection URL for the specified database,
         including credentials. Handle with care — treat the response as a secret.
       parameters:
-        - $ref: '#/components/parameters/dbID'
+        - $ref: "#/components/parameters/dbID"
       responses:
-        '200':
-          $ref: '#/components/responses/ConnectionUrlResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "200":
+          $ref: "#/components/responses/ConnectionUrlResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   # ─── Database Sync ─────────────────────────────────────────────────────────
 
@@ -189,18 +156,18 @@ paths:
       description: >
         Synchronously creates a sync rule and returns it with its assigned ID.
       parameters:
-        - $ref: '#/components/parameters/dbID'
+        - $ref: "#/components/parameters/dbID"
       requestBody:
-        $ref: '#/components/requestBodies/SyncRuleRequest'
+        $ref: "#/components/requestBodies/SyncRuleRequest"
       responses:
-        '201':
-          $ref: '#/components/responses/SyncRuleResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "201":
+          $ref: "#/components/responses/SyncRuleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/{dbID}/sync/{syncID}/update:
     put:
@@ -211,19 +178,19 @@ paths:
       description: >
         Synchronously updates a sync rule and returns the updated record.
       parameters:
-        - $ref: '#/components/parameters/dbID'
-        - $ref: '#/components/parameters/syncID'
+        - $ref: "#/components/parameters/dbID"
+        - $ref: "#/components/parameters/syncID"
       requestBody:
-        $ref: '#/components/requestBodies/SyncRuleRequest'
+        $ref: "#/components/requestBodies/SyncRuleRequest"
       responses:
-        '200':
-          $ref: '#/components/responses/SyncRuleResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "200":
+          $ref: "#/components/responses/SyncRuleResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/{dbID}/sync/{syncID}/delete:
     delete:
@@ -233,15 +200,15 @@ paths:
       summary: Delete a sync rule
       description: Synchronously deletes a sync rule.
       parameters:
-        - $ref: '#/components/parameters/dbID'
-        - $ref: '#/components/parameters/syncID'
+        - $ref: "#/components/parameters/dbID"
+        - $ref: "#/components/parameters/syncID"
       responses:
-        '204':
+        "204":
           description: Sync rule deleted successfully.
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
   /databases/{dbID}/sync:
     put:
@@ -250,11 +217,9 @@ paths:
         - database-sync
       summary: Trigger execution of a sync rule
       description: >
-        Triggers a sync rule run asynchronously. Returns a task ID that can be
-        polled via `GET /databases/{dbID}/sync/{syncID}/tasks/{taskID}`. On completion
-        the task result contains the sync execution summary.
+        Triggers a sync rule run asynchronously.
       parameters:
-        - $ref: '#/components/parameters/dbID'
+        - $ref: "#/components/parameters/dbID"
       requestBody:
         required: true
         description: Identifies which sync rule to execute.
@@ -271,45 +236,36 @@ paths:
                   description: ID of the sync rule to execute
                   example: 7
       responses:
-        '202':
-          $ref: '#/components/responses/TaskAccepted'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+        "202":
+          $ref: "#/components/responses/TaskAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
 
-  /databases/{dbID}/sync/{syncID}/tasks/{taskID}:
+  /tasks/{taskID}:
     get:
-      operationId: getExecuteSyncTaskStatus
-      tags:
-        - tasks
-      summary: Get the status of an executeSyncRule task
-      description: >
-        Polls the status of a task initiated by `PUT /databases/{dbID}/sync`.
-        When `status` is `completed` the `result` field contains a
-        `SyncExecutionResult` with timing and outcome details.
-      parameters:
-        - $ref: '#/components/parameters/dbID'
-        - $ref: '#/components/parameters/syncID'
-        - $ref: '#/components/parameters/taskID'
+      operationId: getTaskUpdates
+      summary: Get the updates of a task
+      description: Get the updates of a task
       responses:
-        '200':
-          description: Task status for an executeSyncRule operation.
+        "200":
+          description: "Task udpates"
           content:
-            application/json:
+            text/event-stream:
               schema:
-                $ref: '#/components/schemas/ExecuteSyncTaskStatus'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                oneOf:
+                  - $ref: "#/components/schemas/TaskUpdate"
+                  - $ref: "#/components/schemas/ErrorEvent"
+                  - $ref: "#/components/schemas/DoneEvent"
+      parameters:
+        - $ref: "#/components/parameters/taskID"
 
 components:
-
   parameters:
     dbID:
       name: dbID
@@ -342,8 +298,42 @@ components:
         example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
 
   schemas:
-
-    # ── Errors ────────────────────────────────────────────────────────────────
+    TaskUpdate:
+      type: object
+      description: Task Update
+      properties:
+        event:
+          type: string
+          enum: [message]
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            status:
+              type: string
+    ErrorEvent:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [error]
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            status:
+              type: string
+    DoneEvent:
+      type: object
+      properties:
+        event:
+          type: string
+          enum: [done]
+        data:
+          type: string
+          example: "[DONE]"
 
     Error:
       type: object
@@ -411,40 +401,40 @@ components:
           description: Human-readable status message
           example: Task completed successfully.
         error:
-          $ref: '#/components/schemas/Error'
+          $ref: "#/components/schemas/Error"
 
     CreateDatabaseTaskStatus:
       description: >
         Task status for a `createDatabase` operation. On completion, `result`
         contains the new database ID.
       allOf:
-        - $ref: '#/components/schemas/TaskStatusBase'
+        - $ref: "#/components/schemas/TaskStatusBase"
         - type: object
           properties:
             result:
-              $ref: '#/components/schemas/DatabaseAcknowledgment'
+              $ref: "#/components/schemas/DatabaseAcknowledgment"
 
     DeleteDatabaseTaskStatus:
       description: >
         Task status for a `deleteDatabase` operation. On completion, `result`
         contains a deletion confirmation.
       allOf:
-        - $ref: '#/components/schemas/TaskStatusBase'
+        - $ref: "#/components/schemas/TaskStatusBase"
         - type: object
           properties:
             result:
-              $ref: '#/components/schemas/DeletionAcknowledgment'
+              $ref: "#/components/schemas/DeletionAcknowledgment"
 
     ExecuteSyncTaskStatus:
       description: >
         Task status for an `executeSyncRule` operation. On completion, `result`
         contains sync timing and outcome details.
       allOf:
-        - $ref: '#/components/schemas/TaskStatusBase'
+        - $ref: "#/components/schemas/TaskStatusBase"
         - type: object
           properties:
             result:
-              $ref: '#/components/schemas/SyncExecutionResult'
+              $ref: "#/components/schemas/SyncExecutionResult"
 
     # ── Database schemas ──────────────────────────────────────────────────────
 
@@ -614,7 +604,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/DatabaseConfig'
+            $ref: "#/components/schemas/DatabaseConfig"
 
     SyncRuleRequest:
       required: true
@@ -622,12 +612,11 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/SyncRuleConfig'
+            $ref: "#/components/schemas/SyncRuleConfig"
 
   # ── Responses ───────────────────────────────────────────────────────────────
 
   responses:
-
     HealthResponse:
       description: Service is reachable and reports its current status.
       content:
@@ -643,33 +632,12 @@ components:
                 type: string
                 example: 1.2.3
 
-    SupportedEnginesResponse:
-      description: Array of supported database engines and their available versions.
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              type: object
-              required:
-                - engine
-                - versions
-              properties:
-                engine:
-                  type: string
-                  example: postgres
-                versions:
-                  type: array
-                  items:
-                    type: string
-                  example: ["14", "15", "16"]
-
     DatabaseAcknowledgmentResponse:
       description: The database was registered or created successfully.
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/DatabaseAcknowledgment'
+            $ref: "#/components/schemas/DatabaseAcknowledgment"
 
     SyncRuleResponse:
       description: The created or updated sync rule.
@@ -677,7 +645,7 @@ components:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SyncRuleConfig'
+              - $ref: "#/components/schemas/SyncRuleConfig"
               - type: object
                 required:
                   - id
@@ -695,7 +663,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/TaskReference'
+            $ref: "#/components/schemas/TaskReference"
 
     ConnectionUrlResponse:
       description: The connection URL for the specified database.
@@ -724,7 +692,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             code: BAD_REQUEST
             message: "Field 'engine' is required."
@@ -734,7 +702,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             code: NOT_FOUND
             message: Database with the given ID was not found.
@@ -744,7 +712,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             code: CONFLICT
             message: A database with this name already exists.
@@ -754,7 +722,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             code: UNPROCESSABLE_ENTITY
             message: Source and destination databases cannot be the same.
@@ -764,7 +732,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: "#/components/schemas/Error"
           example:
             code: INTERNAL_SERVER_ERROR
             message: An unexpected error occurred. Please try again later.

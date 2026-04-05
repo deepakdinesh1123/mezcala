@@ -35,6 +35,11 @@ add-shadcn component:
 pretty:
     npx prettier --write ./
 
+
+[working-directory: 'pkgs/mezui']
+generate-frontend:
+    npx openapi-typescript ../backend/spec/api.yml -o ./src/schema.d.ts
+
 [working-directory: 'pkgs/mezui']
 generate-frontend-dev:
     openapi-generator-cli generate -g typescript-axios -i ../backend/spec/api.yml -o ./src/oas-client --openapi-normalizer SET_TAGS_FOR_ALL_OPERATIONS=Default

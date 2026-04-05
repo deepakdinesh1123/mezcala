@@ -6,22 +6,27 @@ import { api } from "@/utils/api";
 import { useEffect, useState } from "react";
 
 export const useEngines = () => {
+  const [loading, setLoading] = useState(true)
   const [engines, setEngines] = useState<GetSupportedEngines200ResponseInner[]>(
-    [{ engine: "", versions: [""] }],
+    [],
   );
 
   useEffect(() => {
     const fetchEngines = async () => {
       try {
         const response = await api.getSupportedEngines();
-        console.log(response.data);
         setEngines(response.data);
+        console.log(response.data);
+        
       } catch (e: unknown) {
         console.error("Unable to fetch supported engines:", e);
+      } finally {
+        setLoading(false)
       }
     };
 
     fetchEngines();
+    
   }, []);
 
   const createDatabase = async (databaseConfig: DatabaseConfig) => {
@@ -33,5 +38,5 @@ export const useEngines = () => {
     }
   };
 
-  return { engines, createDatabase };
+  return { engines, createDatabase, loading };
 };

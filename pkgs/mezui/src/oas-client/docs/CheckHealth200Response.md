@@ -1,20 +1,21 @@
 # CheckHealth200Response
 
+
 ## Properties
 
-| Name        | Type       | Description | Notes                             |
-| ----------- | ---------- | ----------- | --------------------------------- |
-| **status**  | **string** |             | [default to undefined]            |
-| **version** | **string** |             | [optional] [default to undefined] |
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**status** | **string** |  | [default to undefined]
+**version** | **string** |  | [optional] [default to undefined]
 
 ## Example
 
 ```typescript
-import { CheckHealth200Response } from "./api";
+import { CheckHealth200Response } from './api';
 
 const instance: CheckHealth200Response = {
-  status,
-  version,
+    status,
+    version,
 };
 ```
 

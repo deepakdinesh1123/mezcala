@@ -28,8 +28,12 @@ import {
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input";
 import type { DatabaseConfig } from "@/oas-client";
+import { useEngines } from "@/hooks/useEngines";
 
 export function CreateComponent() {
+
+  const {createDatabase} = useEngines();
+
   const form = useForm<DatabaseConfig>({
     defaultValues: {
       username: "",
@@ -38,6 +42,11 @@ export function CreateComponent() {
   });
 
   function onSubmit(data: DatabaseConfig) {
+    console.log(JSON.stringify(data, null, 2));
+    createDatabase(data)
+    .then((res) => {console.log(res)})
+    .catch((err) => {console.log(err)})
+    
     toast("You submitted the following values:", {
       description: (
         <pre className="mt-2 w-[320px] overflow-x-auto rounded-md bg-code p-4 text-code-foreground">

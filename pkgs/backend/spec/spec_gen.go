@@ -10,11 +10,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
@@ -23,121 +23,50 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for CreateDatabaseTaskStatusStatus.
+// Defines values for DoneEventEvent.
 const (
-	CreateDatabaseTaskStatusStatusCompleted  CreateDatabaseTaskStatusStatus = "completed"
-	CreateDatabaseTaskStatusStatusFailed     CreateDatabaseTaskStatusStatus = "failed"
-	CreateDatabaseTaskStatusStatusInProgress CreateDatabaseTaskStatusStatus = "in_progress"
-	CreateDatabaseTaskStatusStatusPending    CreateDatabaseTaskStatusStatus = "pending"
+	Done DoneEventEvent = "done"
 )
 
-// Valid indicates whether the value is a known member of the CreateDatabaseTaskStatusStatus enum.
-func (e CreateDatabaseTaskStatusStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the DoneEventEvent enum.
+func (e DoneEventEvent) Valid() bool {
 	switch e {
-	case CreateDatabaseTaskStatusStatusCompleted:
-		return true
-	case CreateDatabaseTaskStatusStatusFailed:
-		return true
-	case CreateDatabaseTaskStatusStatusInProgress:
-		return true
-	case CreateDatabaseTaskStatusStatusPending:
+	case Done:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for DeleteDatabaseTaskStatusStatus.
+// Defines values for ErrorEventEvent.
 const (
-	DeleteDatabaseTaskStatusStatusCompleted  DeleteDatabaseTaskStatusStatus = "completed"
-	DeleteDatabaseTaskStatusStatusFailed     DeleteDatabaseTaskStatusStatus = "failed"
-	DeleteDatabaseTaskStatusStatusInProgress DeleteDatabaseTaskStatusStatus = "in_progress"
-	DeleteDatabaseTaskStatusStatusPending    DeleteDatabaseTaskStatusStatus = "pending"
+	ErrorEventEventError ErrorEventEvent = "error"
 )
 
-// Valid indicates whether the value is a known member of the DeleteDatabaseTaskStatusStatus enum.
-func (e DeleteDatabaseTaskStatusStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the ErrorEventEvent enum.
+func (e ErrorEventEvent) Valid() bool {
 	switch e {
-	case DeleteDatabaseTaskStatusStatusCompleted:
-		return true
-	case DeleteDatabaseTaskStatusStatusFailed:
-		return true
-	case DeleteDatabaseTaskStatusStatusInProgress:
-		return true
-	case DeleteDatabaseTaskStatusStatusPending:
+	case ErrorEventEventError:
 		return true
 	default:
 		return false
 	}
 }
 
-// Defines values for ExecuteSyncTaskStatusStatus.
+// Defines values for TaskUpdateEvent.
 const (
-	ExecuteSyncTaskStatusStatusCompleted  ExecuteSyncTaskStatusStatus = "completed"
-	ExecuteSyncTaskStatusStatusFailed     ExecuteSyncTaskStatusStatus = "failed"
-	ExecuteSyncTaskStatusStatusInProgress ExecuteSyncTaskStatusStatus = "in_progress"
-	ExecuteSyncTaskStatusStatusPending    ExecuteSyncTaskStatusStatus = "pending"
+	Message TaskUpdateEvent = "message"
 )
 
-// Valid indicates whether the value is a known member of the ExecuteSyncTaskStatusStatus enum.
-func (e ExecuteSyncTaskStatusStatus) Valid() bool {
+// Valid indicates whether the value is a known member of the TaskUpdateEvent enum.
+func (e TaskUpdateEvent) Valid() bool {
 	switch e {
-	case ExecuteSyncTaskStatusStatusCompleted:
-		return true
-	case ExecuteSyncTaskStatusStatusFailed:
-		return true
-	case ExecuteSyncTaskStatusStatusInProgress:
-		return true
-	case ExecuteSyncTaskStatusStatusPending:
+	case Message:
 		return true
 	default:
 		return false
 	}
 }
-
-// Defines values for TaskStatusBaseStatus.
-const (
-	TaskStatusBaseStatusCompleted  TaskStatusBaseStatus = "completed"
-	TaskStatusBaseStatusFailed     TaskStatusBaseStatus = "failed"
-	TaskStatusBaseStatusInProgress TaskStatusBaseStatus = "in_progress"
-	TaskStatusBaseStatusPending    TaskStatusBaseStatus = "pending"
-)
-
-// Valid indicates whether the value is a known member of the TaskStatusBaseStatus enum.
-func (e TaskStatusBaseStatus) Valid() bool {
-	switch e {
-	case TaskStatusBaseStatusCompleted:
-		return true
-	case TaskStatusBaseStatusFailed:
-		return true
-	case TaskStatusBaseStatusInProgress:
-		return true
-	case TaskStatusBaseStatusPending:
-		return true
-	default:
-		return false
-	}
-}
-
-// CreateDatabaseTaskStatus defines model for CreateDatabaseTaskStatus.
-type CreateDatabaseTaskStatus struct {
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-
-	// Error Standard error envelope returned for all 4xx and 5xx responses.
-	Error *Error `json:"error,omitempty"`
-
-	// Message Human-readable status message
-	Message *string `json:"message,omitempty"`
-
-	// Result Confirmation returned after a database is successfully created or registered. Contains only the system-assigned ID.
-	Result *DatabaseAcknowledgment        `json:"result,omitempty"`
-	Status CreateDatabaseTaskStatusStatus `json:"status"`
-	TaskId openapi_types.UUID             `json:"task_id"`
-}
-
-// CreateDatabaseTaskStatusStatus defines model for CreateDatabaseTaskStatus.Status.
-type CreateDatabaseTaskStatusStatus string
 
 // DatabaseAcknowledgment Confirmation returned after a database is successfully created or registered. Contains only the system-assigned ID.
 type DatabaseAcknowledgment struct {
@@ -169,30 +98,14 @@ type DatabaseConfig struct {
 	Version  *string `json:"version,omitempty"`
 }
 
-// DeleteDatabaseTaskStatus defines model for DeleteDatabaseTaskStatus.
-type DeleteDatabaseTaskStatus struct {
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-
-	// Error Standard error envelope returned for all 4xx and 5xx responses.
-	Error *Error `json:"error,omitempty"`
-
-	// Message Human-readable status message
-	Message *string `json:"message,omitempty"`
-
-	// Result Confirmation that a resource was deleted.
-	Result *DeletionAcknowledgment        `json:"result,omitempty"`
-	Status DeleteDatabaseTaskStatusStatus `json:"status"`
-	TaskId openapi_types.UUID             `json:"task_id"`
+// DoneEvent defines model for DoneEvent.
+type DoneEvent struct {
+	Data  *string         `json:"data,omitempty"`
+	Event *DoneEventEvent `json:"event,omitempty"`
 }
 
-// DeleteDatabaseTaskStatusStatus defines model for DeleteDatabaseTaskStatus.Status.
-type DeleteDatabaseTaskStatusStatus string
-
-// DeletionAcknowledgment Confirmation that a resource was deleted.
-type DeletionAcknowledgment struct {
-	Message string `json:"message"`
-}
+// DoneEventEvent defines model for DoneEvent.Event.
+type DoneEventEvent string
 
 // Error Standard error envelope returned for all 4xx and 5xx responses.
 type Error struct {
@@ -206,40 +119,17 @@ type Error struct {
 	Message string `json:"message"`
 }
 
-// ExecuteSyncTaskStatus defines model for ExecuteSyncTaskStatus.
-type ExecuteSyncTaskStatus struct {
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-
-	// Error Standard error envelope returned for all 4xx and 5xx responses.
-	Error *Error `json:"error,omitempty"`
-
-	// Message Human-readable status message
-	Message *string `json:"message,omitempty"`
-
-	// Result Outcome details of a sync rule execution.
-	Result *SyncExecutionResult        `json:"result,omitempty"`
-	Status ExecuteSyncTaskStatusStatus `json:"status"`
-	TaskId openapi_types.UUID          `json:"task_id"`
+// ErrorEvent defines model for ErrorEvent.
+type ErrorEvent struct {
+	Data *struct {
+		Message *string `json:"message,omitempty"`
+		Status  *string `json:"status,omitempty"`
+	} `json:"data,omitempty"`
+	Event *ErrorEventEvent `json:"event,omitempty"`
 }
 
-// ExecuteSyncTaskStatusStatus defines model for ExecuteSyncTaskStatus.Status.
-type ExecuteSyncTaskStatusStatus string
-
-// SyncExecutionResult Outcome details of a sync rule execution.
-type SyncExecutionResult struct {
-	FinishedAt *time.Time `json:"finished_at,omitempty"`
-	Message    *string    `json:"message,omitempty"`
-
-	// RowsSynced Total number of rows written to the destination
-	RowsSynced *int       `json:"rows_synced,omitempty"`
-	StartedAt  *time.Time `json:"started_at,omitempty"`
-	Status     string     `json:"status"`
-	SyncId     int64      `json:"sync_id"`
-
-	// TablesSynced Number of tables processed during the sync
-	TablesSynced *int `json:"tables_synced,omitempty"`
-}
+// ErrorEventEvent defines model for ErrorEvent.Event.
+type ErrorEventEvent string
 
 // SyncRuleConfig Configuration for syncing data between databases with optional masking rules.
 type SyncRuleConfig struct {
@@ -265,22 +155,17 @@ type TaskReference struct {
 	TaskId openapi_types.UUID `json:"task_id"`
 }
 
-// TaskStatusBase Common fields shared by all task status responses. When `status` is `completed` the operation-specific `result` field is populated. When `status` is `failed` the `error` field is populated.
-type TaskStatusBase struct {
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-
-	// Error Standard error envelope returned for all 4xx and 5xx responses.
-	Error *Error `json:"error,omitempty"`
-
-	// Message Human-readable status message
-	Message *string              `json:"message,omitempty"`
-	Status  TaskStatusBaseStatus `json:"status"`
-	TaskId  openapi_types.UUID   `json:"task_id"`
+// TaskUpdate Task Update
+type TaskUpdate struct {
+	Data *struct {
+		Message *string `json:"message,omitempty"`
+		Status  *string `json:"status,omitempty"`
+	} `json:"data,omitempty"`
+	Event *TaskUpdateEvent `json:"event,omitempty"`
 }
 
-// TaskStatusBaseStatus defines model for TaskStatusBase.Status.
-type TaskStatusBaseStatus string
+// TaskUpdateEvent defines model for TaskUpdate.Event.
+type TaskUpdateEvent string
 
 // DbID defines model for dbID.
 type DbID = int64
@@ -320,12 +205,6 @@ type InternalServerError = Error
 
 // NotFound Standard error envelope returned for all 4xx and 5xx responses.
 type NotFound = Error
-
-// SupportedEnginesResponse defines model for SupportedEnginesResponse.
-type SupportedEnginesResponse = []struct {
-	Engine   string   `json:"engine"`
-	Versions []string `json:"versions"`
-}
 
 // SyncRuleResponse defines model for SyncRuleResponse.
 type SyncRuleResponse struct {
@@ -389,9 +268,6 @@ type ServerInterface interface {
 	// Create a new managed database
 	// (POST /databases/create)
 	CreateDatabase(w http.ResponseWriter, r *http.Request)
-	// Get the status of a createDatabase task
-	// (GET /databases/create/tasks/{taskID})
-	GetCreateDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, taskID TaskID)
 	// List all supported database engines and versions
 	// (GET /databases/supported)
 	GetSupportedEngines(w http.ResponseWriter, r *http.Request)
@@ -401,9 +277,6 @@ type ServerInterface interface {
 	// Delete a database by ID
 	// (DELETE /databases/{dbID}/delete)
 	DeleteDatabase(w http.ResponseWriter, r *http.Request, dbid DbID)
-	// Get the status of a deleteDatabase task
-	// (GET /databases/{dbID}/delete/tasks/{taskID})
-	GetDeleteDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, taskID TaskID)
 	// Trigger execution of a sync rule
 	// (PUT /databases/{dbID}/sync)
 	ExecuteSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID)
@@ -413,15 +286,15 @@ type ServerInterface interface {
 	// Delete a sync rule
 	// (DELETE /databases/{dbID}/sync/{syncID}/delete)
 	DeleteSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID)
-	// Get the status of an executeSyncRule task
-	// (GET /databases/{dbID}/sync/{syncID}/tasks/{taskID})
-	GetExecuteSyncTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID, taskID TaskID)
 	// Update an existing sync rule
 	// (PUT /databases/{dbID}/sync/{syncID}/update)
 	UpdateSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID)
 	// Check Mezcala health
 	// (GET /health)
 	CheckHealth(w http.ResponseWriter, r *http.Request)
+	// Get the updates of a task
+	// (GET /tasks/{taskID})
+	GetTaskUpdates(w http.ResponseWriter, r *http.Request, taskID TaskID)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -437,12 +310,6 @@ func (_ Unimplemented) AddDatabase(w http.ResponseWriter, r *http.Request) {
 // Create a new managed database
 // (POST /databases/create)
 func (_ Unimplemented) CreateDatabase(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Get the status of a createDatabase task
-// (GET /databases/create/tasks/{taskID})
-func (_ Unimplemented) GetCreateDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, taskID TaskID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -464,12 +331,6 @@ func (_ Unimplemented) DeleteDatabase(w http.ResponseWriter, r *http.Request, db
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get the status of a deleteDatabase task
-// (GET /databases/{dbID}/delete/tasks/{taskID})
-func (_ Unimplemented) GetDeleteDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, taskID TaskID) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
 // Trigger execution of a sync rule
 // (PUT /databases/{dbID}/sync)
 func (_ Unimplemented) ExecuteSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID) {
@@ -488,12 +349,6 @@ func (_ Unimplemented) DeleteSyncRule(w http.ResponseWriter, r *http.Request, db
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get the status of an executeSyncRule task
-// (GET /databases/{dbID}/sync/{syncID}/tasks/{taskID})
-func (_ Unimplemented) GetExecuteSyncTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID, taskID TaskID) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
 // Update an existing sync rule
 // (PUT /databases/{dbID}/sync/{syncID}/update)
 func (_ Unimplemented) UpdateSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID) {
@@ -503,6 +358,12 @@ func (_ Unimplemented) UpdateSyncRule(w http.ResponseWriter, r *http.Request, db
 // Check Mezcala health
 // (GET /health)
 func (_ Unimplemented) CheckHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get the updates of a task
+// (GET /tasks/{taskID})
+func (_ Unimplemented) GetTaskUpdates(w http.ResponseWriter, r *http.Request, taskID TaskID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -534,31 +395,6 @@ func (siw *ServerInterfaceWrapper) CreateDatabase(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateDatabase(w, r)
-	}))
-
-	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
-		handler = siw.HandlerMiddlewares[i](handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetCreateDatabaseTaskStatus operation middleware
-func (siw *ServerInterfaceWrapper) GetCreateDatabaseTaskStatus(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "taskID" -------------
-	var taskID TaskID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "taskID", chi.URLParam(r, "taskID"), &taskID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "taskID", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetCreateDatabaseTaskStatus(w, r, taskID)
 	}))
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -623,40 +459,6 @@ func (siw *ServerInterfaceWrapper) DeleteDatabase(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DeleteDatabase(w, r, dbid)
-	}))
-
-	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
-		handler = siw.HandlerMiddlewares[i](handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// GetDeleteDatabaseTaskStatus operation middleware
-func (siw *ServerInterfaceWrapper) GetDeleteDatabaseTaskStatus(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "dbID" -------------
-	var dbid DbID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "dbID", chi.URLParam(r, "dbID"), &dbid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dbID", Err: err})
-		return
-	}
-
-	// ------------- Path parameter "taskID" -------------
-	var taskID TaskID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "taskID", chi.URLParam(r, "taskID"), &taskID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "taskID", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetDeleteDatabaseTaskStatus(w, r, dbid, taskID)
 	}))
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -750,49 +552,6 @@ func (siw *ServerInterfaceWrapper) DeleteSyncRule(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
-// GetExecuteSyncTaskStatus operation middleware
-func (siw *ServerInterfaceWrapper) GetExecuteSyncTaskStatus(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "dbID" -------------
-	var dbid DbID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "dbID", chi.URLParam(r, "dbID"), &dbid, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dbID", Err: err})
-		return
-	}
-
-	// ------------- Path parameter "syncID" -------------
-	var syncID SyncID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "syncID", chi.URLParam(r, "syncID"), &syncID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "syncID", Err: err})
-		return
-	}
-
-	// ------------- Path parameter "taskID" -------------
-	var taskID TaskID
-
-	err = runtime.BindStyledParameterWithOptions("simple", "taskID", chi.URLParam(r, "taskID"), &taskID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "taskID", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetExecuteSyncTaskStatus(w, r, dbid, syncID, taskID)
-	}))
-
-	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
-		handler = siw.HandlerMiddlewares[i](handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 // UpdateSyncRule operation middleware
 func (siw *ServerInterfaceWrapper) UpdateSyncRule(w http.ResponseWriter, r *http.Request) {
 
@@ -832,6 +591,31 @@ func (siw *ServerInterfaceWrapper) CheckHealth(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CheckHealth(w, r)
+	}))
+
+	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
+		handler = siw.HandlerMiddlewares[i](handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTaskUpdates operation middleware
+func (siw *ServerInterfaceWrapper) GetTaskUpdates(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "taskID" -------------
+	var taskID TaskID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "taskID", chi.URLParam(r, "taskID"), &taskID, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "taskID", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTaskUpdates(w, r, taskID)
 	}))
 
 	for i := len(siw.HandlerMiddlewares) - 1; i >= 0; i-- {
@@ -961,9 +745,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/databases/create", wrapper.CreateDatabase)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/databases/create/tasks/{taskID}", wrapper.GetCreateDatabaseTaskStatus)
-	})
-	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/databases/supported", wrapper.GetSupportedEngines)
 	})
 	r.Group(func(r chi.Router) {
@@ -971,9 +752,6 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/databases/{dbID}/delete", wrapper.DeleteDatabase)
-	})
-	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/databases/{dbID}/delete/tasks/{taskID}", wrapper.GetDeleteDatabaseTaskStatus)
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/databases/{dbID}/sync", wrapper.ExecuteSyncRule)
@@ -985,13 +763,13 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Delete(options.BaseURL+"/databases/{dbID}/sync/{syncID}/delete", wrapper.DeleteSyncRule)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/databases/{dbID}/sync/{syncID}/tasks/{taskID}", wrapper.GetExecuteSyncTaskStatus)
-	})
-	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/databases/{dbID}/sync/{syncID}/update", wrapper.UpdateSyncRule)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/health", wrapper.CheckHealth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/tasks/{taskID}", wrapper.GetTaskUpdates)
 	})
 
 	return r
@@ -1019,11 +797,6 @@ type HealthResponseJSONResponse struct {
 type InternalServerErrorJSONResponse Error
 
 type NotFoundJSONResponse Error
-
-type SupportedEnginesResponseJSONResponse []struct {
-	Engine   string   `json:"engine"`
-	Versions []string `json:"versions"`
-}
 
 type SyncRuleResponseJSONResponse struct {
 	// DataRules Column-level anonymization rules. Keys are column names or glob-style patterns (e.g. encrypted_*). Use null to drop a column entirely.
@@ -1143,43 +916,6 @@ func (response CreateDatabase500JSONResponse) VisitCreateDatabaseResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetCreateDatabaseTaskStatusRequestObject struct {
-	TaskID TaskID `json:"taskID"`
-}
-
-type GetCreateDatabaseTaskStatusResponseObject interface {
-	VisitGetCreateDatabaseTaskStatusResponse(w http.ResponseWriter) error
-}
-
-type GetCreateDatabaseTaskStatus200JSONResponse CreateDatabaseTaskStatus
-
-func (response GetCreateDatabaseTaskStatus200JSONResponse) VisitGetCreateDatabaseTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetCreateDatabaseTaskStatus404JSONResponse struct{ NotFoundJSONResponse }
-
-func (response GetCreateDatabaseTaskStatus404JSONResponse) VisitGetCreateDatabaseTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetCreateDatabaseTaskStatus500JSONResponse struct {
-	InternalServerErrorJSONResponse
-}
-
-func (response GetCreateDatabaseTaskStatus500JSONResponse) VisitGetCreateDatabaseTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type GetSupportedEnginesRequestObject struct {
 }
 
@@ -1187,8 +923,9 @@ type GetSupportedEnginesResponseObject interface {
 	VisitGetSupportedEnginesResponse(w http.ResponseWriter) error
 }
 
-type GetSupportedEngines200JSONResponse struct {
-	SupportedEnginesResponseJSONResponse
+type GetSupportedEngines200JSONResponse []struct {
+	Engine   string   `json:"engine"`
+	Versions []string `json:"versions"`
 }
 
 func (response GetSupportedEngines200JSONResponse) VisitGetSupportedEnginesResponse(w http.ResponseWriter) error {
@@ -1279,44 +1016,6 @@ type DeleteDatabase500JSONResponse struct {
 }
 
 func (response DeleteDatabase500JSONResponse) VisitDeleteDatabaseResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetDeleteDatabaseTaskStatusRequestObject struct {
-	DbID   DbID   `json:"dbID"`
-	TaskID TaskID `json:"taskID"`
-}
-
-type GetDeleteDatabaseTaskStatusResponseObject interface {
-	VisitGetDeleteDatabaseTaskStatusResponse(w http.ResponseWriter) error
-}
-
-type GetDeleteDatabaseTaskStatus200JSONResponse DeleteDatabaseTaskStatus
-
-func (response GetDeleteDatabaseTaskStatus200JSONResponse) VisitGetDeleteDatabaseTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetDeleteDatabaseTaskStatus404JSONResponse struct{ NotFoundJSONResponse }
-
-func (response GetDeleteDatabaseTaskStatus404JSONResponse) VisitGetDeleteDatabaseTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetDeleteDatabaseTaskStatus500JSONResponse struct {
-	InternalServerErrorJSONResponse
-}
-
-func (response GetDeleteDatabaseTaskStatus500JSONResponse) VisitGetDeleteDatabaseTaskStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -1465,45 +1164,6 @@ func (response DeleteSyncRule500JSONResponse) VisitDeleteSyncRuleResponse(w http
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetExecuteSyncTaskStatusRequestObject struct {
-	DbID   DbID   `json:"dbID"`
-	SyncID SyncID `json:"syncID"`
-	TaskID TaskID `json:"taskID"`
-}
-
-type GetExecuteSyncTaskStatusResponseObject interface {
-	VisitGetExecuteSyncTaskStatusResponse(w http.ResponseWriter) error
-}
-
-type GetExecuteSyncTaskStatus200JSONResponse ExecuteSyncTaskStatus
-
-func (response GetExecuteSyncTaskStatus200JSONResponse) VisitGetExecuteSyncTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetExecuteSyncTaskStatus404JSONResponse struct{ NotFoundJSONResponse }
-
-func (response GetExecuteSyncTaskStatus404JSONResponse) VisitGetExecuteSyncTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(404)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type GetExecuteSyncTaskStatus500JSONResponse struct {
-	InternalServerErrorJSONResponse
-}
-
-func (response GetExecuteSyncTaskStatus500JSONResponse) VisitGetExecuteSyncTaskStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type UpdateSyncRuleRequestObject struct {
 	DbID   DbID   `json:"dbID"`
 	SyncID SyncID `json:"syncID"`
@@ -1579,6 +1239,33 @@ func (response CheckHealth500JSONResponse) VisitCheckHealthResponse(w http.Respo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type GetTaskUpdatesRequestObject struct {
+	TaskID TaskID `json:"taskID"`
+}
+
+type GetTaskUpdatesResponseObject interface {
+	VisitGetTaskUpdatesResponse(w http.ResponseWriter) error
+}
+
+type GetTaskUpdates200TexteventStreamResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response GetTaskUpdates200TexteventStreamResponse) VisitGetTaskUpdatesResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/event-stream")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Register an existing external database
@@ -1587,9 +1274,6 @@ type StrictServerInterface interface {
 	// Create a new managed database
 	// (POST /databases/create)
 	CreateDatabase(ctx context.Context, request CreateDatabaseRequestObject) (CreateDatabaseResponseObject, error)
-	// Get the status of a createDatabase task
-	// (GET /databases/create/tasks/{taskID})
-	GetCreateDatabaseTaskStatus(ctx context.Context, request GetCreateDatabaseTaskStatusRequestObject) (GetCreateDatabaseTaskStatusResponseObject, error)
 	// List all supported database engines and versions
 	// (GET /databases/supported)
 	GetSupportedEngines(ctx context.Context, request GetSupportedEnginesRequestObject) (GetSupportedEnginesResponseObject, error)
@@ -1599,9 +1283,6 @@ type StrictServerInterface interface {
 	// Delete a database by ID
 	// (DELETE /databases/{dbID}/delete)
 	DeleteDatabase(ctx context.Context, request DeleteDatabaseRequestObject) (DeleteDatabaseResponseObject, error)
-	// Get the status of a deleteDatabase task
-	// (GET /databases/{dbID}/delete/tasks/{taskID})
-	GetDeleteDatabaseTaskStatus(ctx context.Context, request GetDeleteDatabaseTaskStatusRequestObject) (GetDeleteDatabaseTaskStatusResponseObject, error)
 	// Trigger execution of a sync rule
 	// (PUT /databases/{dbID}/sync)
 	ExecuteSyncRule(ctx context.Context, request ExecuteSyncRuleRequestObject) (ExecuteSyncRuleResponseObject, error)
@@ -1611,15 +1292,15 @@ type StrictServerInterface interface {
 	// Delete a sync rule
 	// (DELETE /databases/{dbID}/sync/{syncID}/delete)
 	DeleteSyncRule(ctx context.Context, request DeleteSyncRuleRequestObject) (DeleteSyncRuleResponseObject, error)
-	// Get the status of an executeSyncRule task
-	// (GET /databases/{dbID}/sync/{syncID}/tasks/{taskID})
-	GetExecuteSyncTaskStatus(ctx context.Context, request GetExecuteSyncTaskStatusRequestObject) (GetExecuteSyncTaskStatusResponseObject, error)
 	// Update an existing sync rule
 	// (PUT /databases/{dbID}/sync/{syncID}/update)
 	UpdateSyncRule(ctx context.Context, request UpdateSyncRuleRequestObject) (UpdateSyncRuleResponseObject, error)
 	// Check Mezcala health
 	// (GET /health)
 	CheckHealth(ctx context.Context, request CheckHealthRequestObject) (CheckHealthResponseObject, error)
+	// Get the updates of a task
+	// (GET /tasks/{taskID})
+	GetTaskUpdates(ctx context.Context, request GetTaskUpdatesRequestObject) (GetTaskUpdatesResponseObject, error)
 }
 
 type StrictHandlerFunc = strictnethttp.StrictHTTPHandlerFunc
@@ -1713,32 +1394,6 @@ func (sh *strictHandler) CreateDatabase(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-// GetCreateDatabaseTaskStatus operation middleware
-func (sh *strictHandler) GetCreateDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, taskID TaskID) {
-	var request GetCreateDatabaseTaskStatusRequestObject
-
-	request.TaskID = taskID
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.GetCreateDatabaseTaskStatus(ctx, request.(GetCreateDatabaseTaskStatusRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetCreateDatabaseTaskStatus")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(GetCreateDatabaseTaskStatusResponseObject); ok {
-		if err := validResponse.VisitGetCreateDatabaseTaskStatusResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
 // GetSupportedEngines operation middleware
 func (sh *strictHandler) GetSupportedEngines(w http.ResponseWriter, r *http.Request) {
 	var request GetSupportedEnginesRequestObject
@@ -1808,33 +1463,6 @@ func (sh *strictHandler) DeleteDatabase(w http.ResponseWriter, r *http.Request, 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DeleteDatabaseResponseObject); ok {
 		if err := validResponse.VisitDeleteDatabaseResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// GetDeleteDatabaseTaskStatus operation middleware
-func (sh *strictHandler) GetDeleteDatabaseTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, taskID TaskID) {
-	var request GetDeleteDatabaseTaskStatusRequestObject
-
-	request.DbID = dbid
-	request.TaskID = taskID
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.GetDeleteDatabaseTaskStatus(ctx, request.(GetDeleteDatabaseTaskStatusRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetDeleteDatabaseTaskStatus")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(GetDeleteDatabaseTaskStatusResponseObject); ok {
-		if err := validResponse.VisitGetDeleteDatabaseTaskStatusResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -1935,34 +1563,6 @@ func (sh *strictHandler) DeleteSyncRule(w http.ResponseWriter, r *http.Request, 
 	}
 }
 
-// GetExecuteSyncTaskStatus operation middleware
-func (sh *strictHandler) GetExecuteSyncTaskStatus(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID, taskID TaskID) {
-	var request GetExecuteSyncTaskStatusRequestObject
-
-	request.DbID = dbid
-	request.SyncID = syncID
-	request.TaskID = taskID
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.GetExecuteSyncTaskStatus(ctx, request.(GetExecuteSyncTaskStatusRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "GetExecuteSyncTaskStatus")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(GetExecuteSyncTaskStatusResponseObject); ok {
-		if err := validResponse.VisitGetExecuteSyncTaskStatusResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
 // UpdateSyncRule operation middleware
 func (sh *strictHandler) UpdateSyncRule(w http.ResponseWriter, r *http.Request, dbid DbID, syncID SyncID) {
 	var request UpdateSyncRuleRequestObject
@@ -2021,72 +1621,88 @@ func (sh *strictHandler) CheckHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetTaskUpdates operation middleware
+func (sh *strictHandler) GetTaskUpdates(w http.ResponseWriter, r *http.Request, taskID TaskID) {
+	var request GetTaskUpdatesRequestObject
+
+	request.TaskID = taskID
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTaskUpdates(ctx, request.(GetTaskUpdatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTaskUpdates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTaskUpdatesResponseObject); ok {
+		if err := validResponse.VisitGetTaskUpdatesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"AgAA//+ELOzxOEcAAA==",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

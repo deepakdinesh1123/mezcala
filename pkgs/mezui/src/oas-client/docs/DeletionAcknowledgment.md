@@ -4,17 +4,17 @@ Confirmation that a resource was deleted.
 
 ## Properties
 
-| Name        | Type       | Description | Notes                  |
-| ----------- | ---------- | ----------- | ---------------------- |
-| **message** | **string** |             | [default to undefined] |
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**message** | **string** |  | [default to undefined]
 
 ## Example
 
 ```typescript
-import { DeletionAcknowledgment } from "./api";
+import { DeletionAcknowledgment } from './api';
 
 const instance: DeletionAcknowledgment = {
-  message,
+    message,
 };
 ```
 

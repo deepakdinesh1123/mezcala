@@ -15,7 +15,14 @@ func (s *Server) AddDatabase(ctx context.Context, req spec.AddDatabaseRequestObj
 
 func (s *Server) CreateDatabase(ctx context.Context, req spec.CreateDatabaseRequestObject) (spec.CreateDatabaseResponseObject, error) {
 	task_id := uuid.New()
-	payload, err := json.Marshal(req.Body)
+	payload, err := json.Marshal(spec.CreateDB{
+		Image:    *req.Body.Image,
+		Name:     *req.Body.Name,
+		Password: req.Body.Password,
+		Port:     req.Body.Port,
+		SslMode:  *req.Body.SslMode,
+		Username: req.Body.Username,
+	})
 	if err != nil {
 		return spec.CreateDatabase400JSONResponse{
 			BadRequestJSONResponse: spec.BadRequestJSONResponse{
@@ -24,7 +31,9 @@ func (s *Server) CreateDatabase(ctx context.Context, req spec.CreateDatabaseRequ
 			},
 		}, nil
 	}
-	_, err = s.js.Publish(ctx, fmt.Sprintf("tasks.db_admin.createdb.%s", task_id), payload)
+
+	s.logger.Debug().Msg(fmt.Sprintf(spec.CREATE_DB_SUB, task_id))
+	_, err = s.js.Publish(ctx, fmt.Sprintf(spec.CREATE_DB_SUB, task_id), payload)
 	if err != nil {
 		s.logger.Error().Msg(err.Error())
 		return spec.CreateDatabase500JSONResponse{

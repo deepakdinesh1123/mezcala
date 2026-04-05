@@ -4,17 +4,17 @@ Returned immediately when an async operation is accepted.
 
 ## Properties
 
-| Name        | Type       | Description                          | Notes                  |
-| ----------- | ---------- | ------------------------------------ | ---------------------- |
-| **task_id** | **string** | Unique identifier for the async task | [default to undefined] |
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**task_id** | **string** | Unique identifier for the async task | [default to undefined]
 
 ## Example
 
 ```typescript
-import { TaskReference } from "./api";
+import { TaskReference } from './api';
 
 const instance: TaskReference = {
-  task_id,
+    task_id,
 };
 ```
 
