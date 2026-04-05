@@ -5,49 +5,112 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/deepakdinesh1123/mezcala/pkgs/backend/jsonstream"
 	"github.com/deepakdinesh1123/mezcala/pkgs/backend/spec"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 	"github.com/nats-io/nats.go/jetstream"
 )
 
-func (a *Agent) CreateDatabase(ctx context.Context, task_id string, dbConfig spec.CreateDB) error {
-	msg, _ := json.Marshal(spec.AgentResponse{
+func (a *Agent) CreateDatabase(ctx context.Context, task_id string, msg jetstream.Msg) error {
+	var dbConfig spec.CreateDB
+	err := json.Unmarshal(msg.Data(), &dbConfig)
+	if err != nil {
+		a.logger.Err(err)
+		msg.TermWithReason("Unable to convert payload to required format")
+		return err
+	}
+	mesg, _ := json.Marshal(spec.AgentResponse{
 		Message: fmt.Sprintf("Pulling Image %s", dbConfig.Image),
 	})
-	_, err := a.js.Publish(ctx, fmt.Sprintf(spec.CREATE_DB_SUB, task_id), msg)
+	a.logger.Debug().Msgf("Pulling Image %s", dbConfig.Image)
+
+	_, err = a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), mesg)
 	if err != nil {
 		return err
 	}
 
 	imgPullResp, err := a.dc.ImagePull(ctx, dbConfig.Image, client.ImagePullOptions{})
 	if err != nil {
-		msg, _ := json.Marshal(spec.AgentResponse{
+		errM := msg.TermWithReason(fmt.Sprintf("Error pulling image %s: %v", dbConfig.Image, err.Error()))
+		if errM != nil {
+			a.logger.Err(errM)
+			// return err
+		}
+		mesg, _ := json.Marshal(spec.AgentResponse{
 			Message: fmt.Sprintf("Error pulling image %s: %v", dbConfig.Image, err.Error()),
 			Status:  spec.StatusFail,
 		})
-		_, err := a.js.Publish(ctx, fmt.Sprintf(spec.CREATE_DB_SUB, task_id), msg)
-		if err != nil {
-			return err
+		_, errP := a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), mesg)
+		if errP != nil {
+			a.logger.Err(errP)
+			// return err
 		}
 		return err
 	}
 
-	for resp, err := range imgPullResp.JSONMessages(ctx) {
-		if err != nil {
+	natsWriter := jsonstream.NewNatsWriter(ctx, a.js, task_id, a.logger)
+	if err := jsonstream.Display(ctx, imgPullResp, natsWriter); err != nil {
+		errMsg := fmt.Sprintf("Error streaming image pull for %s: %v", dbConfig.Image, err)
+		if termErr := msg.TermWithReason(errMsg); termErr != nil {
+			a.logger.Err(termErr)
 			msg, _ := json.Marshal(spec.AgentResponse{
 				Message: fmt.Sprintf("Error pulling image %s: %v", dbConfig.Image, err.Error()),
 				Status:  spec.StatusFail,
 			})
-			a.js.Publish(ctx, fmt.Sprintf(spec.CREATE_DB_SUB, task_id), msg)
-		} else {
-			fmt.Printf("%s", resp.Stream)
-			msg, _ := json.Marshal(spec.AgentResponse{
-				Message: resp.Stream,
-				Status:  spec.StatusPass,
-			})
-			a.js.Publish(ctx, fmt.Sprintf(spec.CREATE_DB_SUB, task_id), msg)
+			a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
 		}
+		return err
+	}
+
+	contCreateResp, err := a.dc.ContainerCreate(ctx, client.ContainerCreateOptions{
+		Config: &container.Config{
+			Image: dbConfig.Image,
+		},
+	})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error creating container: %v", err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+	a.logger.Debug().Msgf("container created with id: %s", contCreateResp.ID)
+
+	_, err = a.dc.ContainerStart(ctx, contCreateResp.ID, client.ContainerStartOptions{})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error starting container: %v", err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+
+	contInfo, err := a.dc.ContainerInspect(ctx, contCreateResp.ID, client.ContainerInspectOptions{})
+	if err != nil {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Error inspecting container %s: %v", contCreateResp.ID, err.Error()),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
+	}
+	time.Sleep(5 * time.Second)
+	if contInfo.Container.State == nil || !contInfo.Container.State.Running {
+		a.logger.Err(err)
+		msg, _ := json.Marshal(spec.AgentResponse{
+			Message: fmt.Sprintf("Conatiner not running %s", contCreateResp.ID),
+			Status:  spec.StatusFail,
+		})
+		a.js.Publish(ctx, fmt.Sprintf(spec.TASK_RESP_SUB, task_id), msg)
+		return err
 	}
 	return nil
 }
@@ -70,27 +133,20 @@ func (a *Agent) handleAdmin(ctx context.Context, msg jetstream.Msg) error {
 	a.logger.Debug().Msg(string(msg.Data()))
 
 	switch taskType {
-	case "createDB":
-		var dbConfig spec.CreateDB
-		err := json.Unmarshal(msg.Data(), &dbConfig)
-		if err != nil {
-			msg.TermWithReason("Unable to convert payload to required format")
-			return err
-		}
-		a.CreateDatabase(ctx, taskID, dbConfig)
+	case "create_db":
+		err := a.CreateDatabase(ctx, taskID, msg)
+		return err
 
-	case "deleteDB":
+	case "delete_db":
 		var db spec.DeleteDB
 		err := json.Unmarshal(msg.Data(), &db)
 		if err != nil {
 			msg.TermWithReason("Unable to convert payload to required format")
 			return err
 		}
-		a.DeleteDatabase(taskID, db)
+		return a.DeleteDatabase(taskID, db)
 
 	default:
 		return fmt.Errorf("unknown task type: %s", taskType)
 	}
-
-	return nil
 }

@@ -21,7 +21,3 @@ func (s *Server) ExecuteSyncRule(ctx context.Context, req spec.ExecuteSyncRuleRe
 func (s *Server) UpdateSyncRule(ctx context.Context, req spec.UpdateSyncRuleRequestObject) (spec.UpdateSyncRuleResponseObject, error) {
 	return spec.UpdateSyncRule200JSONResponse{}, nil
 }
-
-func (s *Server) GetExecuteSyncTaskStatus(ctx context.Context, req spec.GetExecuteSyncTaskStatusRequestObject) (spec.GetExecuteSyncTaskStatusResponseObject, error) {
-	return spec.GetExecuteSyncTaskStatus200JSONResponse{}, nil
-}
